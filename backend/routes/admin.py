@@ -6,6 +6,7 @@ from flask_jwt_extended import get_jwt_identity
 from extensions import db
 from models import User, StaffProfile, Trek, Booking
 from utils.auth_helpers import admin_required
+from utils.cache import cache_get, cache_set, cache_delete
 
 admin = Blueprint('admin', __name__)
 
@@ -25,13 +26,19 @@ def parse_date(date_str):
 @admin.route('/api/admin/stats', methods=['GET'])
 @admin_required
 def get_stats():
-    """Dashboard summary stats."""
-    return jsonify({
+    """Dashboard summary stats (cached)."""
+    cached = cache_get('admin:stats')
+    if cached:
+        return jsonify(cached)
+
+    stats = {
         'total_treks': Trek.query.count(),
         'total_users': User.query.filter_by(role='trekker').count(),
         'total_staff': User.query.filter_by(role='staff').count(),
         'total_bookings': Booking.query.count()
-    })
+    }
+    cache_set('admin:stats', stats, ttl=60)
+    return jsonify(stats)
 
 
 # ──────────────── Trek Management ────────────────
@@ -39,7 +46,11 @@ def get_stats():
 @admin.route('/api/admin/treks', methods=['GET'])
 @admin_required
 def get_treks():
-    """List all treks."""
+    """List all treks (cached)."""
+    cached = cache_get('admin:treks')
+    if cached:
+        return jsonify(cached)
+
     treks = Trek.query.all()
     result = []
     for t in treks:
@@ -62,6 +73,7 @@ def get_treks():
             'assigned_staff': t.assigned_staff,
             'staff_name': staff_name
         })
+    cache_set('admin:treks', result, ttl=120)
     return jsonify(result)
 
 
@@ -93,6 +105,7 @@ def create_trek():
     )
     db.session.add(trek)
     db.session.commit()
+    cache_delete('admin:*')  # Invalidate admin cache
 
     return jsonify({'message': 'Trek created', 'id': trek.id}), 201
 
@@ -119,6 +132,7 @@ def update_trek(trek_id):
         trek.end_date = parse_date(data['end_date'])
 
     db.session.commit()
+    cache_delete('admin:*')
     return jsonify({'message': 'Trek updated'})
 
 
@@ -134,6 +148,7 @@ def delete_trek(trek_id):
     Booking.query.filter_by(trek_id=trek_id).delete()
     db.session.delete(trek)
     db.session.commit()
+    cache_delete('admin:*')
     return jsonify({'message': 'Trek deleted'})
 
 

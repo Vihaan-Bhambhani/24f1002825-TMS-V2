@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt_identity
 from extensions import db
 from models import User, Trek, Booking
 from utils.auth_helpers import login_required
+from utils.cache import cache_get, cache_set, cache_delete
 
 user = Blueprint('user', __name__)
 
@@ -10,7 +11,11 @@ user = Blueprint('user', __name__)
 @user.route('/api/treks', methods=['GET'])
 @login_required
 def browse_treks():
-    """List all open treks available for booking."""
+    """List all open treks available for booking (cached)."""
+    cached = cache_get('open:treks')
+    if cached:
+        return jsonify(cached)
+
     treks = Trek.query.filter_by(status='open').all()
     result = []
     for t in treks:
@@ -25,6 +30,7 @@ def browse_treks():
             'start_date': str(t.start_date) if t.start_date else None,
             'end_date': str(t.end_date) if t.end_date else None
         })
+    cache_set('open:treks', result, ttl=60)
     return jsonify(result)
 
 
@@ -78,6 +84,8 @@ def book_trek():
     trek.available_slots -= 1
     db.session.add(booking)
     db.session.commit()
+    cache_delete('open:*')   # Invalidate treks cache (slots changed)
+    cache_delete('admin:*')  # Invalidate admin stats
 
     return jsonify({'message': 'Trek booked successfully', 'booking_id': booking.id}), 201
 
@@ -103,4 +111,6 @@ def cancel_booking(booking_id):
         trek.available_slots += 1
 
     db.session.commit()
+    cache_delete('open:*')
+    cache_delete('admin:*')
     return jsonify({'message': 'Booking cancelled'})
