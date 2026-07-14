@@ -30,6 +30,13 @@
           </li>
         </ul>
 
+        <!-- Staff nav links -->
+        <ul class="navbar-nav me-auto" v-if="user && user.role === 'staff'">
+          <li class="nav-item">
+            <router-link class="nav-link" to="/staff">My Dashboard</router-link>
+          </li>
+        </ul>
+
         <div class="navbar-nav ms-auto">
           <template v-if="user">
             <span class="navbar-text me-3">

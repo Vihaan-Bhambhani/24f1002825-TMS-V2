@@ -43,8 +43,8 @@ npm run dev
 - [x] Milestone 0: Repository and project setup
 - [x] Milestone 1: Database models and schema
 - [x] Milestone 2: Authentication and RBAC
-- [ ] Milestone 3: Admin dashboard and management
-- [ ] Milestone 4: Trek staff dashboard and operations
+- [x] Milestone 3: Admin dashboard and management
+- [x] Milestone 4: Trek staff dashboard and operations
 - [ ] Milestone 5: User dashboard and trek booking
 - [ ] Milestone 6: Booking history and status tracking
 - [ ] Milestone 7: Backend jobs (Celery + Redis)
