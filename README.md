@@ -4,15 +4,15 @@ A role-based Trekking Management Application built with Flask and Vue.js for the
 
 ## Tech Stack
 
-- **Backend**: Flask, SQLAlchemy, SQLite
-- **Frontend**: Vue.js, Vite
-- **Auth**: JWT (upcoming)
+- **Backend**: Flask, Flask-SQLAlchemy, SQLite, Flask-JWT-Extended, Flask-CORS
+- **Frontend**: Vue.js 3, Vite, Vue Router, Axios, Bootstrap 5
+- **Auth**: JWT (JSON Web Tokens)
 
 ## Project Structure
 
 ```
-backend/    — Flask REST API
-frontend/   — Vue.js SPA
+backend/    — Flask REST API (port 5001)
+frontend/   — Vue.js SPA (port 5173)
 ```
 
 ## Setup
@@ -33,11 +33,16 @@ npm install
 npm run dev
 ```
 
+## Default Admin Credentials
+
+- **Email**: admin@trekking.com
+- **Password**: admin123
+
 ## Milestones
 
 - [x] Milestone 0: Repository and project setup
-- [ ] Milestone 1: Database models and schema
-- [ ] Milestone 2: Authentication and RBAC
+- [x] Milestone 1: Database models and schema
+- [x] Milestone 2: Authentication and RBAC
 - [ ] Milestone 3: Admin dashboard and management
 - [ ] Milestone 4: Trek staff dashboard and operations
 - [ ] Milestone 5: User dashboard and trek booking
