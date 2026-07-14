@@ -1,42 +1,46 @@
-# Trekking Management Application
+# Trekking Management Application V2
 
-A web application for managing trekking activities, built as part of the IIT Madras MAD-1 course.
-
-## Roles
-
-- **Admin** — Manages treks, staff, and users
-- **Trek Staff** — Manages assigned treks and participants
-- **Trekker (User)** — Browses and books treks
+A role-based Trekking Management Application built with Flask and Vue.js for the IIT Madras MAD-2 course.
 
 ## Tech Stack
 
-- **Backend**: Python, Flask
-- **Database**: SQLite, SQLAlchemy ORM
-- **Frontend**: HTML5, Jinja2, Bootstrap 5, CSS
-- **Auth**: Flask Sessions, Werkzeug Password Hashing
+- **Backend**: Flask, SQLAlchemy, SQLite
+- **Frontend**: Vue.js, Vite
+- **Auth**: JWT (upcoming)
+
+## Project Structure
+
+```
+backend/    — Flask REST API
+frontend/   — Vue.js SPA
+```
 
 ## Setup
 
+### Backend
 ```bash
-# Create virtual environment
+cd backend
 python -m venv .venv
-
-# Activate it
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
-# Install dependencies
+source .venv/bin/activate    # macOS/Linux
 pip install -r requirements.txt
-
-# Run the application
 python app.py
 ```
 
-The database and admin account are created automatically on first run.
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Default Admin Credentials
+## Milestones
 
-- **Email**: admin@trekking.com
-- **Password**: admin123
+- [x] Milestone 0: Repository and project setup
+- [ ] Milestone 1: Database models and schema
+- [ ] Milestone 2: Authentication and RBAC
+- [ ] Milestone 3: Admin dashboard and management
+- [ ] Milestone 4: Trek staff dashboard and operations
+- [ ] Milestone 5: User dashboard and trek booking
+- [ ] Milestone 6: Booking history and status tracking
+- [ ] Milestone 7: Backend jobs (Celery + Redis)
+- [ ] Milestone 8: API caching (Redis)

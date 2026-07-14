@@ -1,20 +1,19 @@
-# Virtual environment
-.venv/
-venv/
-env/
-
-# Python bytecode
+# Python
 __pycache__/
 *.pyc
 *.pyo
+backend/.venv/
+backend/venv/
+backend/instance/
 
-# SQLite database (created at runtime)
-instance/
+# Node
+frontend/node_modules/
+frontend/dist/
 
-# IDE files
+# IDE
 .vscode/
 .idea/
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
