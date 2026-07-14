@@ -1,6 +1,8 @@
 from flask import Flask
 from config import Config
 from extensions import db
+from models import User, StaffProfile, Trek, Booking
+from seed import seed_admin
 
 
 def create_app():
@@ -11,9 +13,10 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
 
-    # Create database tables
+    # Create database tables and seed admin
     with app.app_context():
         db.create_all()
+        seed_admin()
 
     # Health check route
     @app.route('/')
