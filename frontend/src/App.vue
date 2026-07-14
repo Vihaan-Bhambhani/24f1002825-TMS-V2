@@ -1,12 +1,15 @@
 <template>
   <div>
-    <h1>Trekking Management Application V2</h1>
-    <p>MAD-2 Project — IIT Madras</p>
+    <Navbar />
+    <router-view />
   </div>
 </template>
 
 <script>
+import Navbar from './components/Navbar.vue'
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: { Navbar }
 }
 </script>
