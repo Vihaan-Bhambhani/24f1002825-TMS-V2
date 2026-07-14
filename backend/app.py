@@ -26,9 +26,11 @@ def create_app():
     from routes.auth import auth
     from routes.admin import admin
     from routes.staff import staff
+    from routes.user import user
     app.register_blueprint(auth)
     app.register_blueprint(admin)
     app.register_blueprint(staff)
+    app.register_blueprint(user)
 
     # Health check route
     @app.route('/')
