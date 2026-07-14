@@ -24,7 +24,9 @@ def create_app():
 
     # Register blueprints
     from routes.auth import auth
+    from routes.admin import admin
     app.register_blueprint(auth)
+    app.register_blueprint(admin)
 
     # Health check route
     @app.route('/')
