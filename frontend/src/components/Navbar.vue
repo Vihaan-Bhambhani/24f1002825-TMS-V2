@@ -37,6 +37,13 @@
           </li>
         </ul>
 
+        <!-- Trekker nav links -->
+        <ul class="navbar-nav me-auto" v-if="user && user.role === 'trekker'">
+          <li class="nav-item">
+            <router-link class="nav-link" to="/dashboard">My Dashboard</router-link>
+          </li>
+        </ul>
+
         <div class="navbar-nav ms-auto">
           <template v-if="user">
             <span class="navbar-text me-3">
