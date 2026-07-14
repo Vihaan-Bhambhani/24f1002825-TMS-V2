@@ -53,6 +53,20 @@
         <router-link to="/admin/bookings" class="btn btn-primary w-100">View Bookings</router-link>
       </div>
     </div>
+
+    <!-- Export Section -->
+    <div class="row mt-3">
+      <div class="col-12">
+        <h5>Export Data</h5>
+        <div v-if="exportMsg" class="alert" :class="exportError ? 'alert-danger' : 'alert-success'">{{ exportMsg }}</div>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-outline-secondary w-100" @click="triggerExport('treks')">📥 Export Treks CSV</button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-outline-secondary w-100" @click="triggerExport('bookings')">📥 Export Bookings CSV</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -63,7 +77,9 @@ export default {
   name: 'AdminDashboard',
   data() {
     return {
-      stats: { total_treks: 0, total_users: 0, total_staff: 0, total_bookings: 0 }
+      stats: { total_treks: 0, total_users: 0, total_staff: 0, total_bookings: 0 },
+      exportMsg: '',
+      exportError: false
     }
   },
   async created() {
@@ -72,6 +88,34 @@ export default {
       this.stats = response.data
     } catch (err) {
       console.error('Failed to load stats:', err)
+    }
+  },
+  methods: {
+    async triggerExport(type) {
+      this.exportMsg = ''
+      this.exportError = false
+      this.exportMsg = `Exporting ${type}... please wait.`
+      try {
+        const res = await api.post(`/api/admin/export/${type}`)
+        const filename = res.data.filename
+
+        // Download the file using Axios (JWT sent in header automatically)
+        const downloadRes = await api.get(`/api/admin/download/${filename}`, { responseType: 'blob' })
+        const url = window.URL.createObjectURL(new Blob([downloadRes.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        this.exportMsg = `${type} exported successfully!`
+        setTimeout(() => { this.exportMsg = '' }, 5000)
+      } catch (err) {
+        this.exportError = true
+        this.exportMsg = err.response?.data?.error || 'Export failed. Is the Celery worker running?'
+      }
     }
   }
 }

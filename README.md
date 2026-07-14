@@ -46,6 +46,6 @@ npm run dev
 - [x] Milestone 3: Admin dashboard and management
 - [x] Milestone 4: Trek staff dashboard and operations
 - [x] Milestone 5: User dashboard and trek booking
-- [ ] Milestone 6: Booking history and status tracking
-- [ ] Milestone 7: Backend jobs (Celery + Redis)
+- [x] Milestone 6: Booking history and status tracking
+- [x] Milestone 7: Backend jobs (Celery + Redis)
 - [ ] Milestone 8: API caching (Redis)

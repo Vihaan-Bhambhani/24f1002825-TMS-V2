@@ -1,0 +1,4 @@
+ID,User ID,Trek ID,Booking Date,Status
+1,2,1,2026-07-14 10:03:31.874170,cancelled
+2,2,1,2026-07-14 10:05:36.003082,cancelled
+3,2,1,2026-07-14 10:07:27.534707,booked

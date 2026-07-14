@@ -1,5 +1,6 @@
 from datetime import datetime, date
-from flask import Blueprint, request, jsonify
+import os
+from flask import Blueprint, request, jsonify, send_from_directory
 from werkzeug.security import generate_password_hash
 from flask_jwt_extended import get_jwt_identity
 from extensions import db
@@ -312,3 +313,27 @@ def search():
         'staff': [{'id': u.id, 'name': u.name, 'email': u.email, 'is_blacklisted': u.is_blacklisted} for u in staff],
         'users': [{'id': u.id, 'name': u.name, 'email': u.email, 'is_blacklisted': u.is_blacklisted} for u in users]
     })
+
+
+# ──────────────── Export (Celery Task) ────────────────
+
+@admin.route('/api/admin/export/<export_type>', methods=['POST'])
+@admin_required
+def trigger_export(export_type):
+    """Trigger async CSV export via Celery and return the filename."""
+    if export_type not in ['treks', 'bookings']:
+        return jsonify({'error': 'Export type must be treks or bookings'}), 400
+
+    from tasks import export_csv
+    task = export_csv.delay(export_type)
+    result = task.get(timeout=30)  # Wait for result (file path)
+    filename = os.path.basename(result)
+    return jsonify({'message': f'{export_type} export complete', 'filename': filename}), 200
+
+
+@admin.route('/api/admin/download/<filename>', methods=['GET'])
+@admin_required
+def download_export(filename):
+    """Download a previously exported CSV file."""
+    exports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'exports')
+    return send_from_directory(exports_dir, filename, as_attachment=True)
