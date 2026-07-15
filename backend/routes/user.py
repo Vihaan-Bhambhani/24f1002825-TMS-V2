@@ -1,22 +1,52 @@
-from flask import Blueprint, request, jsonify
+import os
+from flask import Blueprint, request, jsonify, send_from_directory
+from werkzeug.security import generate_password_hash
 from flask_jwt_extended import get_jwt_identity
 from extensions import db
 from models import User, Trek, Booking
-from utils.auth_helpers import login_required
+from utils.auth_helpers import trekker_required
 from utils.cache import cache_get, cache_set, cache_delete
 
 user = Blueprint('user', __name__)
 
 
 @user.route('/api/treks', methods=['GET'])
-@login_required
+@trekker_required
 def browse_treks():
-    """List all open treks available for booking (cached)."""
-    cached = cache_get('open:treks')
-    if cached:
-        return jsonify(cached)
+    """List open treks with optional search/filter (cached when no filters)."""
+    # Get filter/search parameters
+    search = request.args.get('search', '').strip()
+    difficulty = request.args.get('difficulty', '').strip().lower()
+    location = request.args.get('location', '').strip()
+    duration = request.args.get('duration', '').strip()
 
-    treks = Trek.query.filter_by(status='open').all()
+    has_filters = any([search, difficulty, location, duration])
+
+    # Use cache only when there are no filters
+    if not has_filters:
+        cached = cache_get('open:treks')
+        if cached:
+            return jsonify(cached)
+
+    # Build query
+    query = Trek.query.filter_by(status='open')
+
+    if search:
+        search_term = f'%{search}%'
+        query = query.filter(
+            (Trek.name.ilike(search_term)) | (Trek.location.ilike(search_term))
+        )
+    if difficulty and difficulty in ['easy', 'moderate', 'hard']:
+        query = query.filter_by(difficulty=difficulty)
+    if location:
+        query = query.filter(Trek.location.ilike(f'%{location}%'))
+    if duration:
+        try:
+            query = query.filter(Trek.duration <= int(duration))
+        except ValueError:
+            pass
+
+    treks = query.all()
     result = []
     for t in treks:
         result.append({
@@ -30,12 +60,15 @@ def browse_treks():
             'start_date': str(t.start_date) if t.start_date else None,
             'end_date': str(t.end_date) if t.end_date else None
         })
-    cache_set('open:treks', result, ttl=60)
+
+    if not has_filters:
+        cache_set('open:treks', result, ttl=60)
+
     return jsonify(result)
 
 
 @user.route('/api/bookings', methods=['GET'])
-@login_required
+@trekker_required
 def get_my_bookings():
     """List all bookings for the logged-in trekker."""
     user_id = int(get_jwt_identity())
@@ -47,6 +80,11 @@ def get_my_bookings():
             'id': b.id,
             'trek_name': trek.name if trek else 'Unknown',
             'trek_location': trek.location if trek else '',
+            'trek_difficulty': trek.difficulty if trek else '',
+            'trek_duration': trek.duration if trek else 0,
+            'trek_start_date': str(trek.start_date) if trek and trek.start_date else None,
+            'trek_end_date': str(trek.end_date) if trek and trek.end_date else None,
+            'trek_status': trek.status if trek else '',
             'booking_date': str(b.booking_date),
             'booking_status': b.booking_status
         })
@@ -54,7 +92,7 @@ def get_my_bookings():
 
 
 @user.route('/api/bookings', methods=['POST'])
-@login_required
+@trekker_required
 def book_trek():
     """Book a trek. Reduces available slots by 1."""
     user_id = int(get_jwt_identity())
@@ -91,7 +129,7 @@ def book_trek():
 
 
 @user.route('/api/bookings/<int:booking_id>/cancel', methods=['PUT'])
-@login_required
+@trekker_required
 def cancel_booking(booking_id):
     """Cancel a booking. Restores the slot."""
     user_id = int(get_jwt_identity())
@@ -114,3 +152,75 @@ def cancel_booking(booking_id):
     cache_delete('open:*')
     cache_delete('admin:*')
     return jsonify({'message': 'Booking cancelled'})
+
+
+# ──────────────── Profile ────────────────
+
+@user.route('/api/profile', methods=['GET'])
+@trekker_required
+def get_profile():
+    """Get the logged-in user's profile."""
+    user_id = int(get_jwt_identity())
+    u = User.query.get(user_id)
+    if not u:
+        return jsonify({'error': 'User not found'}), 404
+    return jsonify({
+        'id': u.id,
+        'name': u.name,
+        'email': u.email,
+        'role': u.role,
+        'created_at': str(u.created_at)
+    })
+
+
+@user.route('/api/profile', methods=['PUT'])
+@trekker_required
+def update_profile():
+    """Update the logged-in user's name or password."""
+    user_id = int(get_jwt_identity())
+    u = User.query.get(user_id)
+    if not u:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    password = data.get('password', '').strip()
+
+    if name:
+        u.name = name
+    if password:
+        if len(password) < 4:
+            return jsonify({'error': 'Password must be at least 4 characters'}), 400
+        u.password_hash = generate_password_hash(password)
+
+    db.session.commit()
+
+    # Update localStorage user info via response
+    return jsonify({
+        'message': 'Profile updated',
+        'user': {'id': u.id, 'name': u.name, 'email': u.email, 'role': u.role}
+    })
+
+
+# ──────────────── User Export (Celery) ────────────────
+
+@user.route('/api/export/bookings', methods=['POST'])
+@trekker_required
+def trigger_user_export():
+    """Trigger async CSV export of the user's booking history."""
+    user_id = int(get_jwt_identity())
+
+    from tasks import export_user_bookings
+    task = export_user_bookings.delay(user_id)
+    result = task.get(timeout=30)
+    filename = os.path.basename(result)
+
+    return jsonify({'message': 'Booking history exported', 'filename': filename}), 200
+
+
+@user.route('/api/download/<filename>', methods=['GET'])
+@trekker_required
+def download_user_export(filename):
+    """Download a previously exported CSV file."""
+    exports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'exports')
+    return send_from_directory(exports_dir, filename, as_attachment=True)

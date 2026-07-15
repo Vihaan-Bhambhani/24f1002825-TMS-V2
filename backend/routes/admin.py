@@ -92,6 +92,10 @@ def create_trek():
     if data['difficulty'] not in ['easy', 'moderate', 'hard']:
         return jsonify({'error': 'Difficulty must be easy, moderate, or hard'}), 400
 
+    valid_statuses = ['pending', 'approved', 'open', 'closed', 'completed']
+    if data.get('status') and data['status'] not in valid_statuses:
+        return jsonify({'error': f'Status must be one of: {", ".join(valid_statuses)}'}), 400
+
     trek = Trek(
         name=data['name'],
         location=data['location'],
@@ -131,8 +135,14 @@ def update_trek(trek_id):
     if 'end_date' in data:
         trek.end_date = parse_date(data['end_date'])
 
+    # Validate status if provided
+    valid_statuses = ['pending', 'approved', 'open', 'closed', 'completed']
+    if trek.status not in valid_statuses:
+        return jsonify({'error': f'Status must be one of: {", ".join(valid_statuses)}'}), 400
+
     db.session.commit()
     cache_delete('admin:*')
+    cache_delete('open:*')
     return jsonify({'message': 'Trek updated'})
 
 
@@ -172,6 +182,8 @@ def assign_staff(trek_id):
         trek.assigned_staff = None
 
     db.session.commit()
+    cache_delete('admin:*')
+    cache_delete('open:*')
     return jsonify({'message': 'Staff assigned to trek'})
 
 

@@ -34,3 +34,15 @@ def login_required(fn):
     def wrapper(*args, **kwargs):
         return fn(*args, **kwargs)
     return wrapper
+
+
+def trekker_required(fn):
+    """Decorator that checks if the logged-in user is a trekker."""
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        claims = get_jwt()
+        if claims.get('role') != 'trekker':
+            return jsonify({'error': 'Trekker access required'}), 403
+        return fn(*args, **kwargs)
+    return wrapper

@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt_identity
 from extensions import db
 from models import User, Trek, Booking
 from utils.auth_helpers import staff_required
+from utils.cache import cache_delete
 
 staff = Blueprint('staff', __name__)
 
@@ -67,6 +68,8 @@ def update_trek_status(trek_id):
 
     trek.status = new_status
     db.session.commit()
+    cache_delete('open:*')
+    cache_delete('admin:*')
     return jsonify({'message': f'Trek status updated to {new_status}'})
 
 
@@ -92,3 +95,34 @@ def get_trek_bookings(trek_id):
             'booking_status': b.booking_status
         })
     return jsonify(result)
+
+
+@staff.route('/api/staff/treks/<int:trek_id>/slots', methods=['PUT'])
+@staff_required
+def update_trek_slots(trek_id):
+    """Update available slots for an assigned trek."""
+    user_id = int(get_jwt_identity())
+    trek = Trek.query.filter_by(id=trek_id, assigned_staff=user_id).first()
+
+    if not trek:
+        return jsonify({'error': 'Trek not found or not assigned to you'}), 404
+
+    data = request.get_json()
+    new_slots = data.get('available_slots')
+
+    if new_slots is None:
+        return jsonify({'error': 'available_slots is required'}), 400
+
+    try:
+        new_slots = int(new_slots)
+    except (ValueError, TypeError):
+        return jsonify({'error': 'available_slots must be a number'}), 400
+
+    if new_slots < 0:
+        return jsonify({'error': 'available_slots cannot be negative'}), 400
+
+    trek.available_slots = new_slots
+    db.session.commit()
+    cache_delete('open:*')
+    cache_delete('admin:*')
+    return jsonify({'message': f'Slots updated to {new_slots}'})

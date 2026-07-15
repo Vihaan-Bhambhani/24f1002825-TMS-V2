@@ -43,7 +43,11 @@
             <td>{{ trek.name }}</td>
             <td>{{ trek.location }}</td>
             <td>{{ trek.difficulty }}</td>
-            <td>{{ trek.available_slots }}</td>
+            <td>
+              <div class="d-flex align-items-center">
+                <input type="number" class="form-control form-control-sm me-1" style="width: 70px" :value="trek.available_slots" @change="updateSlots(trek.id, $event.target.value)" min="0">
+              </div>
+            </td>
             <td>{{ trek.start_date || '-' }} to {{ trek.end_date || '-' }}</td>
             <td>{{ trek.booking_count }}</td>
             <td>
@@ -138,6 +142,14 @@ export default {
       this.selectedTrek = trek
       const res = await api.get(`/api/staff/treks/${trek.id}/bookings`)
       this.trekBookings = res.data
+    },
+    async updateSlots(trekId, slots) {
+      try {
+        await api.put(`/api/staff/treks/${trekId}/slots`, { available_slots: parseInt(slots) })
+        await this.loadData()
+      } catch (err) {
+        alert(err.response?.data?.error || 'Failed to update slots')
+      }
     }
   }
 }
