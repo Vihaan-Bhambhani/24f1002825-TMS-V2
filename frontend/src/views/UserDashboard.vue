@@ -218,9 +218,15 @@ export default {
     async exportBookings() {
       this.exporting = true
       try {
+        // Step 1: Trigger the async export task
         const res = await api.post('/api/export/bookings')
-        const filename = res.data.filename
+        const taskId = res.data.task_id
+        this.showMessage('success', 'Export started! Processing...')
 
+        // Step 2: Poll for completion
+        const filename = await this.pollExportStatus(taskId)
+
+        // Step 3: Download the file
         const downloadRes = await api.get(`/api/download/${filename}`, { responseType: 'blob' })
         const url = window.URL.createObjectURL(new Blob([downloadRes.data]))
         const link = document.createElement('a')
@@ -233,10 +239,29 @@ export default {
 
         this.showMessage('success', 'Booking history exported!')
       } catch (err) {
-        this.showMessage('error', err.response?.data?.error || 'Export failed. Is the Celery worker running?')
+        this.showMessage('error', err.response?.data?.error || err.message || 'Export failed. Is the Celery worker running?')
       } finally {
         this.exporting = false
       }
+    },
+    pollExportStatus(taskId) {
+      return new Promise((resolve, reject) => {
+        const interval = setInterval(async () => {
+          try {
+            const res = await api.get(`/api/export/status/${taskId}`)
+            if (res.data.status === 'done') {
+              clearInterval(interval)
+              resolve(res.data.filename)
+            } else if (res.data.status === 'failed') {
+              clearInterval(interval)
+              reject(new Error(res.data.error || 'Export failed'))
+            }
+          } catch (err) {
+            clearInterval(interval)
+            reject(err)
+          }
+        }, 2000)  // Poll every 2 seconds
+      })
     },
     async updateProfile() {
       try {

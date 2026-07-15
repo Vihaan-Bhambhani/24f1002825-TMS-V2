@@ -207,15 +207,31 @@ def update_profile():
 @user.route('/api/export/bookings', methods=['POST'])
 @trekker_required
 def trigger_user_export():
-    """Trigger async CSV export of the user's booking history."""
+    """Trigger async CSV export of the user's booking history. Returns task ID immediately."""
     user_id = int(get_jwt_identity())
 
     from tasks import export_user_bookings
     task = export_user_bookings.delay(user_id)
-    result = task.get(timeout=30)
-    filename = os.path.basename(result)
 
-    return jsonify({'message': 'Booking history exported', 'filename': filename}), 200
+    return jsonify({'message': 'Export started', 'task_id': task.id}), 202
+
+
+@user.route('/api/export/status/<task_id>', methods=['GET'])
+@trekker_required
+def check_export_status(task_id):
+    """Poll the status of an export task."""
+    from celery_config import celery_app
+    result = celery_app.AsyncResult(task_id)
+
+    if result.state == 'PENDING':
+        return jsonify({'status': 'pending'})
+    elif result.state == 'SUCCESS':
+        filename = os.path.basename(result.result)
+        return jsonify({'status': 'done', 'filename': filename})
+    elif result.state == 'FAILURE':
+        return jsonify({'status': 'failed', 'error': str(result.result)}), 500
+    else:
+        return jsonify({'status': result.state.lower()})
 
 
 @user.route('/api/download/<filename>', methods=['GET'])
@@ -224,3 +240,4 @@ def download_user_export(filename):
     """Download a previously exported CSV file."""
     exports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'exports')
     return send_from_directory(exports_dir, filename, as_attachment=True)
+
