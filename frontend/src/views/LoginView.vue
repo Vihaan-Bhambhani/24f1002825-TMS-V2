@@ -60,6 +60,7 @@ export default {
         // Store token and user info
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
+        window.dispatchEvent(new Event('auth-changed'))
 
         // Redirect based on role
         const role = response.data.user.role

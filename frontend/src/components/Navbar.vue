@@ -40,7 +40,13 @@
         <!-- Trekker nav links -->
         <ul class="navbar-nav me-auto" v-if="user && user.role === 'trekker'">
           <li class="nav-item">
-            <router-link class="nav-link" to="/dashboard">My Dashboard</router-link>
+            <router-link class="nav-link" to="/dashboard">Treks</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/bookings">My Bookings</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/profile">Profile</router-link>
           </li>
         </ul>
 
@@ -60,15 +66,25 @@
 <script>
 export default {
   name: 'NavbarComponent',
-  computed: {
-    user() {
-      return JSON.parse(localStorage.getItem('user') || 'null')
+  data() {
+    return {
+      user: JSON.parse(localStorage.getItem('user') || 'null')
     }
   },
+  mounted() {
+    window.addEventListener('auth-changed', this.refreshUser)
+  },
+  beforeUnmount() {
+    window.removeEventListener('auth-changed', this.refreshUser)
+  },
   methods: {
+    refreshUser() {
+      this.user = JSON.parse(localStorage.getItem('user') || 'null')
+    },
     logout() {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      window.dispatchEvent(new Event('auth-changed'))
       this.$router.push('/login')
     }
   }

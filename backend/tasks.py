@@ -16,35 +16,33 @@ def get_flask_context():
     return app, app.app_context()
 
 
-def send_email(to_email, subject, html_body):
+def send_email(app, to_email, subject, html_body):
     """Send an email using SMTP. Falls back to console print if SMTP is not configured."""
-    app, ctx = get_flask_context()
-    with ctx:
-        server_host = app.config.get('MAIL_SERVER', 'localhost')
-        server_port = app.config.get('MAIL_PORT', 587)
-        username = app.config.get('MAIL_USERNAME', '')
-        password = app.config.get('MAIL_PASSWORD', '')
-        sender = app.config.get('MAIL_DEFAULT_SENDER', 'tms@trekking.com')
+    server_host = app.config.get('MAIL_SERVER', 'localhost')
+    server_port = app.config.get('MAIL_PORT', 587)
+    username = app.config.get('MAIL_USERNAME', '')
+    password = app.config.get('MAIL_PASSWORD', '')
+    sender = app.config.get('MAIL_DEFAULT_SENDER', 'tms@trekking.com')
 
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = to_email
-        msg.attach(MIMEText(html_body, 'html'))
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = to_email
+    msg.attach(MIMEText(html_body, 'html'))
 
-        try:
-            with smtplib.SMTP(server_host, server_port) as server:
-                server.starttls()
-                if username and password:
-                    server.login(username, password)
-                server.sendmail(sender, to_email, msg.as_string())
-            print(f'[EMAIL] Sent to {to_email}: {subject}')
-        except Exception as e:
-            # Fallback: print to console if SMTP fails
-            print(f'[EMAIL FALLBACK] Could not send email ({e}). Printing instead:')
-            print(f'  To: {to_email}')
-            print(f'  Subject: {subject}')
-            print(f'  Body: {html_body[:500]}...')
+    try:
+        with smtplib.SMTP(server_host, server_port) as server:
+            server.starttls()
+            if username and password:
+                server.login(username, password)
+            server.sendmail(sender, to_email, msg.as_string())
+        print(f'[EMAIL] Sent to {to_email}: {subject}')
+    except Exception as e:
+        # Fallback: print to console if SMTP fails
+        print(f'[EMAIL FALLBACK] Could not send email ({e}). Printing instead:')
+        print(f'  To: {to_email}')
+        print(f'  Subject: {subject}')
+        print(f'  Body: {html_body[:500]}...')
 
 
 @celery_app.task(name='tasks.daily_reminder')
@@ -75,7 +73,7 @@ def daily_reminder():
                 </ul>
                 <p>Please ensure you are prepared. Happy trekking!</p>
                 """
-                send_email(user.email, f'Reminder: Upcoming Trek - {trek.name}', html)
+                send_email(app, user.email, f'Reminder: Upcoming Trek - {trek.name}', html)
                 reminded += 1
 
         result = f'Sent reminders for {reminded} bookings'
@@ -140,7 +138,7 @@ def monthly_report():
         # Send to admin
         admin = User.query.filter_by(role='admin').first()
         admin_email = app.config.get('ADMIN_EMAIL', admin.email if admin else 'admin@trekking.com')
-        send_email(admin_email, f'TMS Monthly Report - {report_month}', html_report)
+        send_email(app, admin_email, f'TMS Monthly Report - {report_month}', html_report)
 
         print(f'[REPORT] Monthly report generated for {report_month}')
         return f'Monthly report sent for {report_month}'
