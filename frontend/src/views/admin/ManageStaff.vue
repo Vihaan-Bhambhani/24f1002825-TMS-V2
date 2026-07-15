@@ -32,8 +32,8 @@
               <input type="text" class="form-control" v-model="form.phone">
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label">Bio</label>
-              <input type="text" class="form-control" v-model="form.bio">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" v-model="form.confirm_password" required>
             </div>
           </div>
           <button type="submit" class="btn btn-primary">Create Staff</button>
@@ -93,7 +93,7 @@ export default {
       showForm: false,
       formError: '',
       formSuccess: '',
-      form: { name: '', email: '', password: '', phone: '', bio: '' }
+      form: { name: '', email: '', password: '', phone: '', confirm_password: '' }
     }
   },
   async created() {
@@ -107,10 +107,14 @@ export default {
     async createStaff() {
       this.formError = ''
       this.formSuccess = ''
+      if (this.form.password !== this.form.confirm_password) {
+        this.formError = 'Passwords do not match'
+        return
+      }
       try {
         await api.post('/api/admin/staff', this.form)
         this.formSuccess = 'Staff member created!'
-        this.form = { name: '', email: '', password: '', phone: '', bio: '' }
+        this.form = { name: '', email: '', password: '', phone: '', confirm_password: '' }
         await this.loadStaff()
       } catch (err) {
         this.formError = err.response?.data?.error || 'Failed to create staff'
