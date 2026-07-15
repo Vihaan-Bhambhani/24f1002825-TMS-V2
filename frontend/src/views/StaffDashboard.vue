@@ -84,6 +84,7 @@
               <th>Email</th>
               <th>Booking Date</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -95,6 +96,12 @@
                 <span class="badge" :class="b.booking_status === 'booked' ? 'bg-primary' : b.booking_status === 'cancelled' ? 'bg-danger' : 'bg-success'">
                   {{ b.booking_status }}
                 </span>
+              </td>
+              <td>
+                <button v-if="b.booking_status === 'booked'" class="btn btn-sm btn-danger" @click="cancelBooking(selectedTrek.id, b.id)">
+                  Remove
+                </button>
+                <span v-else class="text-muted">—</span>
               </td>
             </tr>
           </tbody>
@@ -149,6 +156,16 @@ export default {
         await this.loadData()
       } catch (err) {
         alert(err.response?.data?.error || 'Failed to update slots')
+      }
+    },
+    async cancelBooking(trekId, bookingId) {
+      if (!confirm('Remove this participant from the trek?')) return
+      try {
+        await api.put(`/api/staff/treks/${trekId}/bookings/${bookingId}/cancel`)
+        await this.viewBookings(this.selectedTrek)
+        await this.loadData()
+      } catch (err) {
+        alert(err.response?.data?.error || 'Failed to remove participant')
       }
     }
   }

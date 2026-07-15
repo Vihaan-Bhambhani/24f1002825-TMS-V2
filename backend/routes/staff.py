@@ -126,3 +126,28 @@ def update_trek_slots(trek_id):
     cache_delete('open:*')
     cache_delete('admin:*')
     return jsonify({'message': f'Slots updated to {new_slots}'})
+
+
+@staff.route('/api/staff/treks/<int:trek_id>/bookings/<int:booking_id>/cancel', methods=['PUT'])
+@staff_required
+def cancel_participant_booking(trek_id, booking_id):
+    """Staff can remove/cancel a participant's booking from their assigned trek."""
+    user_id = int(get_jwt_identity())
+    trek = Trek.query.filter_by(id=trek_id, assigned_staff=user_id).first()
+
+    if not trek:
+        return jsonify({'error': 'Trek not found or not assigned to you'}), 404
+
+    booking = Booking.query.filter_by(id=booking_id, trek_id=trek_id).first()
+    if not booking:
+        return jsonify({'error': 'Booking not found'}), 404
+
+    if booking.booking_status != 'booked':
+        return jsonify({'error': 'Booking is already cancelled'}), 400
+
+    booking.booking_status = 'cancelled'
+    trek.available_slots += 1
+    db.session.commit()
+    cache_delete('open:*')
+    cache_delete('admin:*')
+    return jsonify({'message': 'Participant booking cancelled'})
