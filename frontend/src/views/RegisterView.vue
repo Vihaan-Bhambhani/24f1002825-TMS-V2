@@ -18,13 +18,15 @@
                 <label class="form-label">Email</label>
                 <input type="email" class="form-control" v-model="email" required>
               </div>
-              <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-control" v-model="password" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Confirm Password</label>
-                <input type="password" class="form-control" v-model="confirm_password" required>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Password</label>
+                  <input type="password" class="form-control" v-model="password" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Confirm Password</label>
+                  <input type="password" class="form-control" v-model="confirm_password" required>
+                </div>
               </div>
               <button type="submit" class="btn btn-primary w-100" :disabled="loading">
                 {{ loading ? 'Registering...' : 'Register' }}

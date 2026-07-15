@@ -23,15 +23,11 @@
               <label class="form-label">Email</label>
               <input type="email" class="form-control" v-model="form.email" required>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-6 mb-3">
               <label class="form-label">Password</label>
               <input type="password" class="form-control" v-model="form.password" required>
             </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Phone</label>
-              <input type="text" class="form-control" v-model="form.phone">
-            </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-6 mb-3">
               <label class="form-label">Confirm Password</label>
               <input type="password" class="form-control" v-model="form.confirm_password" required>
             </div>
@@ -49,7 +45,6 @@
             <th>ID</th>
             <th>Name</th>
             <th>Email</th>
-            <th>Phone</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -59,7 +54,6 @@
             <td>{{ s.id }}</td>
             <td>{{ s.name }}</td>
             <td>{{ s.email }}</td>
-            <td>{{ s.phone || '-' }}</td>
             <td>
               <span class="badge" :class="s.is_blacklisted ? 'bg-danger' : 'bg-success'">
                 {{ s.is_blacklisted ? 'Blacklisted' : 'Active' }}
@@ -72,7 +66,7 @@
             </td>
           </tr>
           <tr v-if="staff.length === 0">
-            <td colspan="6" class="text-center text-muted">No staff members yet</td>
+            <td colspan="5" class="text-center text-muted">No staff members yet</td>
           </tr>
         </tbody>
       </table>
@@ -93,7 +87,7 @@ export default {
       showForm: false,
       formError: '',
       formSuccess: '',
-      form: { name: '', email: '', password: '', phone: '', confirm_password: '' }
+      form: { name: '', email: '', password: '', confirm_password: '' }
     }
   },
   async created() {
@@ -114,7 +108,7 @@ export default {
       try {
         await api.post('/api/admin/staff', this.form)
         this.formSuccess = 'Staff member created!'
-        this.form = { name: '', email: '', password: '', phone: '', confirm_password: '' }
+        this.form = { name: '', email: '', password: '', confirm_password: '' }
         await this.loadStaff()
       } catch (err) {
         this.formError = err.response?.data?.error || 'Failed to create staff'

@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
+from werkzeug.security import generate_password_hash
 from flask_jwt_extended import get_jwt_identity
 from extensions import db
-from models import User, Trek, Booking
+from models import User, Trek, Booking, StaffProfile
 from utils.auth_helpers import staff_required
 from utils.cache import cache_delete
 
@@ -151,3 +152,59 @@ def cancel_participant_booking(trek_id, booking_id):
     cache_delete('open:*')
     cache_delete('admin:*')
     return jsonify({'message': 'Participant booking cancelled'})
+
+
+# ──────────────── Staff Profile ────────────────
+
+@staff.route('/api/staff/profile', methods=['GET'])
+@staff_required
+def get_staff_profile():
+    """Get the logged-in staff member's profile."""
+    user_id = int(get_jwt_identity())
+    u = User.query.get(user_id)
+    if not u:
+        return jsonify({'error': 'User not found'}), 404
+    sp = StaffProfile.query.filter_by(user_id=user_id).first()
+    return jsonify({
+        'id': u.id,
+        'name': u.name,
+        'email': u.email,
+        'phone': sp.phone if sp else '',
+        'role': u.role,
+        'created_at': str(u.created_at)
+    })
+
+
+@staff.route('/api/staff/profile', methods=['PUT'])
+@staff_required
+def update_staff_profile():
+    """Update the logged-in staff member's name, phone, or password."""
+    user_id = int(get_jwt_identity())
+    u = User.query.get(user_id)
+    if not u:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    phone = data.get('phone', '').strip()
+    password = data.get('password', '').strip()
+
+    if name:
+        u.name = name
+    if phone is not None:
+        sp = StaffProfile.query.filter_by(user_id=user_id).first()
+        if not sp:
+            sp = StaffProfile(user_id=user_id)
+            db.session.add(sp)
+        sp.phone = phone
+    if password:
+        if len(password) < 4:
+            return jsonify({'error': 'Password must be at least 4 characters'}), 400
+        u.password_hash = generate_password_hash(password)
+
+    db.session.commit()
+    return jsonify({
+        'message': 'Profile updated',
+        'user': {'id': u.id, 'name': u.name, 'email': u.email, 'role': u.role}
+    })
+

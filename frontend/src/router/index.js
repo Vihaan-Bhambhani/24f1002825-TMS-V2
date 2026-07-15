@@ -4,6 +4,7 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import StaffDashboard from '../views/StaffDashboard.vue'
+import StaffProfile from '../views/StaffProfile.vue'
 import UserDashboard from '../views/UserDashboard.vue'
 import UserBookings from '../views/UserBookings.vue'
 import UserProfile from '../views/UserProfile.vue'
@@ -30,6 +31,7 @@ const routes = [
 
   // Staff and User routes
   { path: '/staff', name: 'StaffDashboard', component: StaffDashboard, meta: { requiresAuth: true, role: 'staff' } },
+  { path: '/staff/profile', name: 'StaffProfile', component: StaffProfile, meta: { requiresAuth: true, role: 'staff' } },
   { path: '/dashboard', name: 'UserDashboard', component: UserDashboard, meta: { requiresAuth: true, role: 'trekker' } },
   { path: '/bookings', name: 'UserBookings', component: UserBookings, meta: { requiresAuth: true, role: 'trekker' } },
   { path: '/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true, role: 'trekker' } }

@@ -35,6 +35,9 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/staff">My Dashboard</router-link>
           </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/staff/profile">Profile</router-link>
+          </li>
         </ul>
 
         <!-- Trekker nav links -->
