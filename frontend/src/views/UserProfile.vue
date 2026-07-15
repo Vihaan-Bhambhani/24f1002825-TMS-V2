@@ -37,6 +37,10 @@
               <label class="form-label">New Password (leave blank to keep current)</label>
               <input type="password" class="form-control" v-model="newPassword" placeholder="Enter new password" minlength="4">
             </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" v-model="confirmPassword" placeholder="Confirm new password">
+            </div>
           </div>
           <button type="submit" class="btn btn-primary">Update Profile</button>
         </form>
@@ -54,6 +58,7 @@ export default {
     return {
       profile: { name: '', email: '', role: '', created_at: '' },
       newPassword: '',
+      confirmPassword: '',
       successMsg: '',
       errorMsg: ''
     }
@@ -73,6 +78,10 @@ export default {
     async updateProfile() {
       this.successMsg = ''
       this.errorMsg = ''
+      if (this.newPassword && this.newPassword !== this.confirmPassword) {
+        this.errorMsg = 'Passwords do not match'
+        return
+      }
       try {
         const payload = { name: this.profile.name }
         if (this.newPassword) payload.password = this.newPassword
@@ -80,6 +89,7 @@ export default {
         const res = await api.put('/api/profile', payload)
         this.successMsg = 'Profile updated successfully!'
         this.newPassword = ''
+        this.confirmPassword = ''
 
         // Update localStorage so navbar reflects new name
         localStorage.setItem('user', JSON.stringify(res.data.user))
