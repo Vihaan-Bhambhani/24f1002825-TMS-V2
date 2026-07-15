@@ -44,10 +44,10 @@
         <router-link to="/admin/treks" class="btn btn-primary w-100">Manage Treks</router-link>
       </div>
       <div class="col-md-3 mb-2">
-        <router-link to="/admin/staff" class="btn btn-primary w-100">Manage Staff</router-link>
+        <router-link to="/admin/users" class="btn btn-primary w-100">Manage Users</router-link>
       </div>
       <div class="col-md-3 mb-2">
-        <router-link to="/admin/users" class="btn btn-primary w-100">Manage Users</router-link>
+        <router-link to="/admin/staff" class="btn btn-primary w-100">Manage Staff</router-link>
       </div>
       <div class="col-md-3 mb-2">
         <router-link to="/admin/bookings" class="btn btn-primary w-100">View Bookings</router-link>
