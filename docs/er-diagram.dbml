@@ -1,0 +1,53 @@
+// Trekking Management System V2 — DBML based on the current V2 SQLAlchemy models.
+// The core relationships match V1, but some fields differ.
+// Paste into https://dbdiagram.io to render/export the ER diagram.
+
+Table user {
+  id integer [pk, increment]
+  name varchar(100) [not null]
+  email varchar(120) [not null, unique]
+  password_hash varchar(256) [not null]
+  role varchar(20) [not null, note: 'admin, staff, trekker']
+  is_active boolean [default: true]
+  is_blacklisted boolean [default: false]
+  created_at datetime
+}
+
+Table staff_profile {
+  id integer [pk, increment]
+  user_id integer [not null]
+  phone varchar(15) [default: '']
+  bio text [default: '']
+  created_at datetime
+}
+
+Table trek {
+  id integer [pk, increment]
+  name varchar(150) [not null]
+  location varchar(150) [not null]
+  difficulty varchar(20) [not null, note: 'easy, moderate, hard']
+  duration integer [not null, note: 'Duration in days']
+  available_slots integer [not null]
+  description text [default: '']
+  status varchar(20) [default: 'pending', note: 'pending, approved, open, closed, completed']
+  start_date date
+  end_date date
+  assigned_staff integer
+}
+
+Table booking {
+  id integer [pk, increment]
+  user_id integer [not null]
+  trek_id integer [not null]
+  booking_date datetime
+  booking_status varchar(20) [default: 'booked', note: 'booked, cancelled, completed']
+}
+
+Ref: staff_profile.user_id > user.id
+Ref: trek.assigned_staff > user.id
+Ref: booking.user_id > user.id
+Ref: booking.trek_id > trek.id
+
+// Note: staff_profile.user_id is not unique in the current database model.
+// The ORM configures a one-to-one relationship, but the database schema does
+// not enforce uniqueness; this diagram reflects the actual FK constraint.
