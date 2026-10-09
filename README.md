@@ -1,51 +1,76 @@
-# Trekking Management Application V2
+# Trekking Management Application — V2
 
-A role-based Trekking Management Application built with Flask and Vue.js for the IIT Madras MAD-2 course.
+A role-based trekking management application built with **Flask, SQLAlchemy, SQLite, Vue.js 3, and Bootstrap 5**.
 
-## Tech Stack
+V2 separates the Flask backend API from the Vue single-page frontend and demonstrates authentication, role-based workflows, trekking operations, and booking management.
 
-- **Backend**: Flask, Flask-SQLAlchemy, SQLite, Flask-JWT-Extended, Flask-CORS
-- **Frontend**: Vue.js 3, Vite, Vue Router, Axios, Bootstrap 5
-- **Auth**: JWT (JSON Web Tokens)
+## Highlights
 
-## Project Structure
+- Flask backend with SQLAlchemy ORM
+- Vue 3 frontend with Vue Router and Axios
+- JWT-based authentication
+- Role-based admin, staff, and trekker workflows
+- Trek management and staff assignment
+- Booking and status tracking
+- Relational database design
 
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python, Flask, Flask-SQLAlchemy |
+| Database | SQLite |
+| Authentication | Flask-JWT-Extended |
+| Frontend | Vue.js 3, Vite, Vue Router, Axios |
+| UI | Bootstrap 5 |
+| Background jobs/cache | Celery and Redis (project components) |
+
+## Entity-Relationship Diagram
+
+The diagram below reflects the current V2 SQLAlchemy models. The editable DBML source is available at [`docs/er-diagram.dbml`](docs/er-diagram.dbml).
+
+![Trekking Management Application V2 Entity-Relationship Diagram](docs/images/er-diagram.svg)
+
+## Project structure
+
+```text
+backend/    Flask API, models, and server configuration
+frontend/   Vue.js single-page application
+docs/
+├── er-diagram.dbml
+└── images/
+    └── er-diagram.svg
 ```
-backend/    — Flask REST API (port 5001)
-frontend/   — Vue.js SPA (port 5173)
-```
 
-## Setup
+## Run locally
 
 ### Backend
+
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate    # macOS/Linux
+```
+
+Activate the virtual environment, then install and run:
+
+```bash
 pip install -r requirements.txt
 python app.py
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Default Admin Credentials
+Follow the backend/frontend environment configuration in the source before running. Do not use default or shared credentials outside a disposable local environment.
 
-- **Email**: admin@trekking.com
-- **Password**: admin123
+## Notes
 
-## Milestones
+This is a supporting academic application project, documented to make its architecture and database relationships easier to inspect. It is not presented as a production-ready service.
 
-- [x] Milestone 0: Repository and project setup
-- [x] Milestone 1: Database models and schema
-- [x] Milestone 2: Authentication and RBAC
-- [x] Milestone 3: Admin dashboard and management
-- [x] Milestone 4: Trek staff dashboard and operations
-- [x] Milestone 5: User dashboard and trek booking
-- [x] Milestone 6: Booking history and status tracking
-- [x] Milestone 7: Backend jobs (Celery + Redis)
-- [x] Milestone 8: API caching (Redis)
+---
+**Author:** Vihaan Bhambhani
